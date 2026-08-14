@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mod_capital — Риск жана Лот Калькулятору</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A0B;
+    --bg-2:#101011;
+    --surface:#161213;
+    --surface-2:#1D1719;
+    --border:#3A2426;
+    --border-soft:#241B1C;
+    --text:#F3EDEE;
+    --text-dim:#9C9296;
+    --text-faint:#5E565A;
+    --red:#C1272D;
+    --red-bright:#E9463D;
+    --teal:#3AA98E;
+    --warn:#E8935A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(193,39,45,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 10%, rgba(58,169,142,0.04), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding:48px 20px 80px;
+    line-height:1.5;
+  }
+  .wrap{max-width:620px; margin:0 auto;}
+
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:34px;}
+  .brand-mark{
+    width:34px; height:34px; border:1px solid var(--red);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px;
+    color:var(--red-bright); letter-spacing:-0.5px; flex-shrink:0;
+  }
+  .brand-name{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:16px; letter-spacing:0.5px;}
+  .brand-name span{color:var(--red-bright);}
+  .brand-sub{font-size:11px; color:var(--text-faint); letter-spacing:1.5px; text-transform:uppercase; margin-left:auto; font-family:'IBM Plex Mono', monospace;}
+
+  .lang-toggle{
+    display:flex; gap:0; margin-left:14px; flex-shrink:0;
+    border:1px solid var(--border-soft);
+  }
+  .lang-btn{
+    background:var(--surface); color:var(--text-faint);
+    border:none; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:0.5px; padding:6px 10px; cursor:pointer;
+    transition:color .15s ease, background .15s ease;
+  }
+  .lang-btn + .lang-btn{border-left:1px solid var(--border-soft);}
+  .lang-btn.active{background:var(--red); color:#fff;}
+
+  h1{
+    font-family:'Space Grotesk', sans-serif; font-weight:600;
+    font-size:28px; letter-spacing:-0.3px; margin-bottom:10px;
+  }
+  .lede{color:var(--text-dim); font-size:14.5px; max-width:480px; margin-bottom:32px;}
+
+  .readout{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-top:2px solid var(--red);
+    padding:26px 28px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .readout-label{
+    font-size:11px; color:var(--text-faint); text-transform:uppercase;
+    letter-spacing:1.5px; margin-bottom:14px; font-family:'IBM Plex Mono', monospace;
+  }
+  .readout-lcd{
+    background:var(--bg-2);
+    border:1px solid var(--border-soft);
+    padding:18px 20px;
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  }
+  .readout-value{
+    font-family:'IBM Plex Mono', monospace; font-weight:600;
+    font-size:40px; color:var(--red-bright);
+    letter-spacing:1px;
+    text-shadow:0 0 18px rgba(233,70,61,0.30);
+  }
+  .readout-unit{font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--text-dim);}
+  .readout-hint{font-size:12.5px; color:var(--text-faint); margin-top:10px; font-family:'IBM Plex Mono', monospace;}
+
+  .stats{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1px;
+    background:var(--border); border:1px solid var(--border);
+    margin-bottom:24px;
+  }
+  .stat{background:var(--surface); padding:16px 18px;}
+  .stat-label{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; font-family:'IBM Plex Mono', monospace;}
+  .stat-value{font-family:'IBM Plex Mono', monospace; font-size:18px; font-weight:500; color:var(--text);}
+  .stat-value.warn{color:var(--warn);}
+  .stat-value.ok{color:var(--teal);}
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    padding:26px 28px;
+    margin-bottom:20px;
+  }
+  .field{margin-bottom:20px;}
+  .field:last-child{margin-bottom:0;}
+  .field-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  label{font-size:13px; color:var(--text-dim); font-weight:500;}
+  .field-note{font-size:11px; color:var(--text-faint); font-family:'IBM Plex Mono', monospace;}
+
+  select, input[type=number]{
+    width:100%;
+    background:var(--bg-2);
+    border:1px solid var(--border-soft);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    padding:11px 14px;
+    outline:none;
+    transition:border-color .15s ease;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%239C9296'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:32px;
+  }
+  select:focus, input[type=number]:focus{border-color:var(--red);}
+  input::placeholder{color:var(--text-faint);}
+
+  .pip-row{display:flex; gap:10px;}
+  .pip-row .pip-auto{
+    flex-shrink:0; width:auto; padding:11px 14px;
+    color:var(--text-faint); font-size:11px;
+    border:1px dashed var(--border-soft);
+    display:flex; align-items:center; letter-spacing:0.5px;
+    text-transform:uppercase;
+  }
+  .pip-row input{flex:1;}
+
+  .formula{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px; color:var(--text-faint);
+    text-align:center; margin-top:28px; line-height:1.7;
+  }
+  .formula b{color:var(--text-dim); font-weight:500;}
+
+  footer{
+    text-align:center; margin-top:36px;
+    font-size:11.5px; color:var(--text-faint);
+    letter-spacing:0.3px;
+  }
+  footer span{color:var(--red);}
+
+  @media (max-width:480px){
+    .stats{grid-template-columns:1fr;}
+    .panel, .readout{padding:22px 18px;}
+    h1{font-size:24px;}
+    .readout-value{font-size:32px;}
+    .brand-sub{display:none;}
+  }
+
+  @media (prefers-reduced-motion:no-preference){
+    .readout-value{transition:opacity .12s ease;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="brand-mark">MC</div>
+    <div class="brand-name">Mod<span>_capital</span></div>
+    <div class="brand-sub" id="brandSub">Риск иштиктери</div>
+    <div class="lang-toggle">
+      <button type="button" class="lang-btn" id="btnKy">KY</button>
+      <button type="button" class="lang-btn" id="btnRu">RU</button>
+    </div>
+  </div>
+
+  <h1 id="title">Риск жана Лот Калькулятору</h1>
+  <p class="lede" id="lede">Валюта жубун тандаңыз, SL (pips) жана риск суммасын киргизиңиз — керектүү лот көлөмү өзү эсептелет.</p>
+
+  <div class="readout">
+    <div class="readout-label" id="readoutLabel">Керектүү лот көлөмү</div>
+    <div class="readout-lcd">
+      <span class="readout-value" id="lotOut">0.00</span>
+      <span class="readout-unit" id="readoutUnit">лот</span>
+    </div>
+    <div class="readout-hint" id="lotHint">Маалыматтарды киргизиңиз…</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label" id="statLabel1">Иш жүзүндөгү риск</div>
+      <div class="stat-value" id="actualRisk">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label" id="statLabel2">1 pip баасы</div>
+      <div class="stat-value" id="pipPrice">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label" id="statLabel3">Так лот (тегеректелбеген)</div>
+      <div class="stat-value" id="exactLot">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label" id="statLabel4">SL зыяны</div>
+      <div class="stat-value" id="slLoss">—</div>
+    </div>
+    <div class="stat" style="grid-column:1/-1;">
+      <div class="stat-label" id="statLabel5">Депозиттен риск</div>
+      <div class="stat-value" id="depositRisk">—</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="field">
+      <div class="field-row">
+        <label for="pair" id="pairLabel">Валюта жубу</label>
+        <span class="field-note" id="pipDefault">0.01 лотто, USD</span>
+      </div>
+      <select id="pair"></select>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <label for="pipPrice2" id="pipFieldLabel">$ / 1 pip (0.01 лотто)</label>
+        <span class="field-note" id="pipModeLabel">авто</span>
+      </div>
+      <div class="pip-row">
+        <input type="number" id="pipPrice2" step="0.001" min="0">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="slPips" id="slLabel">Stop Loss, pips</label>
+      <div style="margin-top:8px;">
+        <input type="number" id="slPips" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="riskAmount" id="riskLabel">Риск суммасы, USD</label>
+      <div style="margin-top:8px;">
+        <input type="number" id="riskAmount" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <label for="deposit" id="depositLabel">Депозит (милдеттүү эмес)</label>
+        <span class="field-note" id="depositNote">риск %ти көрсөтөт</span>
+      </div>
+      <div style="margin-top:8px;">
+        <input type="number" id="deposit" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="formula" id="formula">
+      <b>Лот = Риск ÷ (SL × 1 pip баасы)</b><br>
+      0.01ге чейин ылдыйга тегеректелет
+    </div>
+  </div>
+
+  <footer id="footer">Mod<span>_capital</span> · тартиптүү риск-менеджмент</footer>
+
+</div>
+
+<script>
+  const PAIRS = [
+    { code: "EURUSD", ky: "EUR/USD",              ru: "EUR/USD",           pip: 0.100 },
+    { code: "GBPUSD", ky: "GBP/USD",              ru: "GBP/USD",           pip: 0.100 },
+    { code: "AUDUSD", ky: "AUD/USD",              ru: "AUD/USD",           pip: 0.100 },
+    { code: "NZDUSD", ky: "NZD/USD",              ru: "NZD/USD",           pip: 0.100 },
+    { code: "USDCHF", ky: "USD/CHF",              ru: "USD/CHF",           pip: 0.110 },
+    { code: "USDCAD", ky: "USD/CAD",              ru: "USD/CAD",           pip: 0.074 },
+    { code: "USDJPY", ky: "USD/JPY",              ru: "USD/JPY",           pip: 0.067 },
+    { code: "EURJPY", ky: "EUR/JPY",              ru: "EUR/JPY",           pip: 0.067 },
+    { code: "GBPJPY", ky: "GBP/JPY",              ru: "GBP/JPY",           pip: 0.067 },
+    { code: "EURGBP", ky: "EUR/GBP",              ru: "EUR/GBP",           pip: 0.125 },
+    { code: "XAUUSD", ky: "XAU/USD (алтын)",      ru: "XAU/USD (золото)",  pip: 0.100 },
+    { code: "XAGUSD", ky: "XAG/USD (күмүш)",      ru: "XAG/USD (серебро)", pip: 0.100 },
+    { code: "WTIUSD", ky: "WTI (мунай)",          ru: "WTI (нефть)",       pip: 0.100 },
+    { code: "CUSTOM", ky: "Өз баасы",             ru: "Свой курс",         pip: 0.100 }
+  ];
+
+  const I18N = {
+    ky: {
+      brandSub: "Риск иштиктери",
+      title: "Риск жана Лот Калькулятору",
+      lede: "Валюта жубун тандаңыз, SL (pips) жана риск суммасын киргизиңиз — керектүү лот көлөмү өзү эсептелет.",
+      readoutLabel: "Керектүү лот көлөмү",
+      readoutUnit: "лот",
+      hintEnterData: "Маалыматтарды киргизиңиз…",
+      hintTooSmall: "Риск суммасы бир лоттун минималдуу баасынан аз",
+      hintResult: (sl, risk) => 'SL = ' + sl + ' pip · риск = $' + risk,
+      statLabel1: "Иш жүзүндөгү риск",
+      statLabel2: "1 pip баасы",
+      statLabel3: "Так лот (тегеректелбеген)",
+      statLabel4: "SL зыяны",
+      statLabel5: "Депозиттен риск",
+      pairLabel: "Валюта жубу",
+      pipDefaultNote: (v) => '10 pip = $' + v,
+      pipFieldLabel: "$ / 1 pip (0.01 лотто)",
+      pipModeAuto: "авто",
+      pipModeManual: "кол менен",
+      slLabel: "Stop Loss, pips",
+      slPlaceholder: "мис. 20",
+      riskLabel: "Риск суммасы, USD",
+      riskPlaceholder: "мис. 50",
+      depositLabel: "Депозит (милдеттүү эмес)",
+      depositNote: "риск %ти көрсөтөт",
+      depositPlaceholder: "мис. 500",
+      formulaLine1: "Лот = Риск ÷ (SL × 1 pip баасы)",
+      formulaLine2: "0.01ге чейин ылдыйга тегеректелет",
+      footer: "тартиптүү риск-менеджмент"
+    },
+    ru: {
+      brandSub: "Риск-менеджмент",
+      title: "Калькулятор риска и лота",
+      lede: "Выберите валютную пару, укажите SL (в пунктах) и сумму риска — нужный объём лота рассчитается сам.",
+      readoutLabel: "Требуемый объём лота",
+      readoutUnit: "лот",
+      hintEnterData: "Введите данные…",
+      hintTooSmall: "Сумма риска меньше стоимости минимального лота",
+      hintResult: (sl, risk) => 'SL = ' + sl + ' пунктов · риск = $' + risk,
+      statLabel1: "Фактический риск",
+      statLabel2: "Цена 1 пункта (pip)",
+      statLabel3: "Точный лот (без округления)",
+      statLabel4: "Убыток по SL",
+      statLabel5: "Риск от депозита",
+      pairLabel: "Валютная пара",
+      pipDefaultNote: (v) => '10 пунктов = $' + v,
+      pipFieldLabel: "$ / 1 пункт (0.01 лота)",
+      pipModeAuto: "авто",
+      pipModeManual: "вручную",
+      slLabel: "Stop Loss, пунктов",
+      slPlaceholder: "напр. 20",
+      riskLabel: "Сумма риска, USD",
+      riskPlaceholder: "напр. 50",
+      depositLabel: "Депозит (необязательно)",
+      depositNote: "покажет % риска",
+      depositPlaceholder: "напр. 500",
+      formulaLine1: "Лот = Риск ÷ (SL × цена 1 пункта)",
+      formulaLine2: "Округляется вниз до 0.01",
+      footer: "дисциплинированный риск-менеджмент"
+    }
+  };
+
+  let lang = 'ky';
+
+  const pairSelect = document.getElementById('pair');
+  const pipInput = document.getElementById('pipPrice2');
+  const pipModeLabel = document.getElementById('pipModeLabel');
+  const pipDefaultNote = document.getElementById('pipDefault');
+  const slInput = document.getElementById('slPips');
+  const riskInput = document.getElementById('riskAmount');
+  const depositInput = document.getElementById('deposit');
+
+  const lotOut = document.getElementById('lotOut');
+  const lotHint = document.getElementById('lotHint');
+  const actualRisk = document.getElementById('actualRisk');
+  const pipPriceOut = document.getElementById('pipPrice');
+  const exactLot = document.getElementById('exactLot');
+  const slLoss = document.getElementById('slLoss');
+  const depositRisk = document.getElementById('depositRisk');
+
+  const btnKy = document.getElementById('btnKy');
+  const btnRu = document.getElementById('btnRu');
+
+  let pipTouched = false;
+
+  function buildPairOptions(){
+    const prevValue = pairSelect.value;
+    pairSelect.innerHTML = '';
+    PAIRS.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.code;
+      opt.textContent = p[lang];
+      pairSelect.appendChild(opt);
+    });
+    pairSelect.value = prevValue && PAIRS.some(p => p.code === prevValue) ? prevValue : 'EURUSD';
+  }
+
+  function currentPair(){
+    return PAIRS.find(p => p.code === pairSelect.value) || PAIRS[0];
+  }
+
+  function applyPairDefault(){
+    const pair = currentPair();
+    pipInput.value = pair.pip.toFixed(3);
+    pipTouched = false;
+    pipModeLabel.textContent = I18N[lang].pipModeAuto;
+    pipDefaultNote.textContent = I18N[lang].pipDefaultNote((pair.pip * 10).toFixed(2));
+  }
+
+  function fmt(n, digits){
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  }
+
+  function applyStaticText(){
+    const t = I18N[lang];
+    document.documentElement.lang = lang;
+    document.getElementById('brandSub').textContent = t.brandSub;
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('lede').textContent = t.lede;
+    document.getElementById('readoutLabel').textContent = t.readoutLabel;
+    document.getElementById('readoutUnit').textContent = t.readoutUnit;
+    document.getElementById('statLabel1').textContent = t.statLabel1;
+    document.getElementById('statLabel2').textContent = t.statLabel2;
+    document.getElementById('statLabel3').textContent = t.statLabel3;
+    document.getElementById('statLabel4').textContent = t.statLabel4;
+    document.getElementById('statLabel5').textContent = t.statLabel5;
+    document.getElementById('pairLabel').textContent = t.pairLabel;
+    document.getElementById('pipFieldLabel').textContent = t.pipFieldLabel;
+    document.getElementById('slLabel').textContent = t.slLabel;
+    slInput.placeholder = t.slPlaceholder;
+    document.getElementById('riskLabel').textContent = t.riskLabel;
+    riskInput.placeholder = t.riskPlaceholder;
+    document.getElementById('depositLabel').textContent = t.depositLabel;
+    document.getElementById('depositNote').textContent = t.depositNote;
+    depositInput.placeholder = t.depositPlaceholder;
+    document.getElementById('formula').innerHTML = '<b>' + t.formulaLine1 + '</b><br>' + t.formulaLine2;
+    document.getElementById('footer').innerHTML = 'Mod<span>_capital</span> · ' + t.footer;
+    pipModeLabel.textContent = pipTouched ? t.pipModeManual : t.pipModeAuto;
+
+    btnKy.classList.toggle('active', lang === 'ky');
+    btnRu.classList.toggle('active', lang === 'ru');
+  }
+
+  function setLang(newLang){
+    lang = newLang;
+    buildPairOptions();
+    applyStaticText();
+    applyPairDefault();
+    recalc();
+  }
+
+  function recalc(){
+    const t = I18N[lang];
+    const pip = parseFloat(pipInput.value);
+    const sl = parseFloat(slInput.value);
+    const risk = parseFloat(riskInput.value);
+    const deposit = parseFloat(depositInput.value);
+
+    pipPriceOut.textContent = isFinite(pip) && pip > 0 ? '$' + fmt(pip, 3) : '—';
+
+    if (!isFinite(pip) || pip <= 0 || !isFinite(sl) || sl <= 0 || !isFinite(risk) || risk <= 0){
+      lotOut.textContent = '0.00';
+      lotHint.textContent = t.hintEnterData;
+      actualRisk.textContent = '—';
+      exactLot.textContent = '—';
+      slLoss.textContent = '—';
+      depositRisk.textContent = '—';
+      return;
+    }
+
+    const costPerLot = sl * pip * 100;
+    const exact = risk / costPerLot;
+    let rounded = Math.floor(exact * 100) / 100;
+    if (rounded < 0.01) rounded = 0;
+
+    lotOut.textContent = rounded.toFixed(2);
+    lotHint.textContent = rounded > 0
+      ? t.hintResult(sl, fmt(risk, 2))
+      : t.hintTooSmall;
+
+    const realRisk = rounded * costPerLot;
+    actualRisk.textContent = '$' + fmt(realRisk, 2);
+    exactLot.textContent = exact.toFixed(4) + ' ' + t.readoutUnit;
+    slLoss.textContent = '$' + fmt(realRisk, 2);
+
+    if (isFinite(deposit) && deposit > 0){
+      const pct = (realRisk / deposit) * 100;
+      depositRisk.textContent = pct.toFixed(2) + '%';
+      depositRisk.className = 'stat-value ' + (pct > 5 ? 'warn' : pct > 2 ? '' : 'ok');
+    } else {
+      depositRisk.textContent = '—';
+      depositRisk.className = 'stat-value';
+    }
+  }
+
+  pairSelect.addEventListener('change', () => { applyPairDefault(); recalc(); });
+  pipInput.addEventListener('input', () => {
+    pipTouched = true;
+    pipModeLabel.textContent = I18N[lang].pipModeManual;
+    recalc();
+  });
+  [slInput, riskInput, depositInput].forEach(el => el.addEventListener('input', recalc));
+
+  btnKy.addEventListener('click', () => setLang('ky'));
+  btnRu.addEventListener('click', () => setLang('ru'));
+
+  buildPairOptions();
+  applyStaticText();
+  applyPairDefault();
+  recalc();
+</script>
+</body>
+</html>
